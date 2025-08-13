@@ -9,7 +9,9 @@ function App() {
   return (
     <Router>
       <nav className="navbar">
-      <div className="header">Fit4Life
+      <div className="header"><Link to="/" className="logo" style={{ textDecoration: "none", color: "inherit" }}>
+            Fit4Life
+          </Link>
       <ul className="nav-links">
         <li><Link to="/">Home</Link></li>
         <li><Link to="/exercises">Exercises</Link></li>
