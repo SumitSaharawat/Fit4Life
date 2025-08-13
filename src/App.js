@@ -1,24 +1,31 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import Home from "./pages/Home";  // ✅ Keep this import
+import Exercises from "./pages/Exercises";
+import CreatePlan from "./pages/CreatePlan";
+import WorkoutDetails from "./pages/WorkoutDetails";
+import "./App.css";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <nav className="navbar">
+      <div className="header">Fit4Life
+      <ul className="nav-links">
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/exercises">Exercises</Link></li>
+        <li><Link to="/workouts">Workouts</Link></li>
+        <li><Link to="/create-plan">CreatePlan</Link></li>
+      </ul>
+      </div>
+    </nav>
+
+      <Routes>
+       <Route path="/" element={<Home />} />  {/* ✅ Use it here */}
+       <Route path="Exercises" element={<Exercises />} />  {/* ✅ Use it here */} 
+       <Route path="/create-plan" element={<CreatePlan />} />
+       <Route path="/workout/:id" element={<WorkoutDetails />} />
+      </Routes>
+    </Router>
   );
 }
 

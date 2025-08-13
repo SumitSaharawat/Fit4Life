@@ -1,0 +1,88 @@
+.workout-detail-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.workout-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.exercise-card {
+  background: #fff8e1;
+  border: 1px solid #f5d276;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.plus-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: orange;
+  color: white;
+  border: none;
+  font-size: 28px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.plus-btn:hover {
+  background: #e08900;
+}
+
+/* Modal Styling */
+.modal-overlay1{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal1 {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal input,
+.modal select {
+  padding: 10px;
+  font-size: 16px;
+}
+
+.modal-actions1 {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-actions1 button {
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-actions1 button:first-child {
+  background: orange;
+  color: white;
+}
+
+.modal-actions1 button:last-child {
+  background: gray;
+  color: white;
+}

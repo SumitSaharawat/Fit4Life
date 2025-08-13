@@ -1,0 +1,12 @@
+.exercises-page {
+  text-align: center;
+  padding: 20px;
+}
+
+.exercise-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
