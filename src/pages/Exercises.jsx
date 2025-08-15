@@ -1,6 +1,6 @@
 import ExerciseCard from "../components/ExerciseCard";
 import "../Styles/Exercises.css";
-import pushupImg from "/Users/sumitsaharawat/Desktop/fit4life/public/mainpage.jpg";
+import pushupImg from "/Users/sumitmac/Documents/fit4life/public/Push-up.webp";
 
 export default function Exercises() {
   const exercises = [
