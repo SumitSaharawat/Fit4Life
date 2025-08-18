@@ -1,7 +1,14 @@
 .workout-detail-container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 20px;
+  padding: 4rem;
+  text-align: left;
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: x-large;
+  background: radial-gradient(ellipse at center, #E08900 0%, black 75%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 .workout-title {
@@ -11,11 +18,26 @@
 }
 
 .exercise-card {
-  background: #fff8e1;
-  border: 1px solid #f5d276;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid orange;
+  color: white;
+  background: none;
+  position: relative;
+  display: inline-block;
+  text-align: left;
+  width: 100%;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #d32f2f; /* red for visibility */
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
 }
 
 .plus-btn {
@@ -51,7 +73,7 @@
 }
 
 .modal1 {
-  background: white;
+  backdrop-filter: blur(10px);
   padding: 20px;
   border-radius: 8px;
   width: 350px;

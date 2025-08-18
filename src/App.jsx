@@ -22,8 +22,8 @@ function App() {
     </nav>
 
       <Routes>
-       <Route path="/" element={<Home />} />  {/* ✅ Use it here */}
-       <Route path="Exercises" element={<Exercises />} />  {/* ✅ Use it here */} 
+       <Route path="/" element={<Home />} />  
+       <Route path="Exercises" element={<Exercises />} />  
        <Route path="/create-plan" element={<CreatePlan />} />
        <Route path="/workout/:id" element={<WorkoutDetails />} />
       </Routes>

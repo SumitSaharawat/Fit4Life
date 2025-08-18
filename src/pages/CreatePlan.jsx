@@ -118,9 +118,9 @@ export default function CreatePlan() {
                     title="Delete workout"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setWorkouts((prev) => prev.filter((w) => w.id !== workout.id));
-                      // or if you want a confirm:
-                      // if (window.confirm('Delete this workout?')) { ... }
+                      fetch(`${API}/api/workouts/${workout.id}`, { method: "DELETE" })
+                        .then(() => setWorkouts(prev => prev.filter(w => w.id !== workout.id)))
+                        .catch(console.error);
                     }}
                   >
                     ✕
