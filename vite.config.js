@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000 // optional, matches CRA's default
+    port: 3000,
+    host: true  // listen on 0.0.0.0 so Safari and other browsers can connect
   },
   resolve: {
     extensions: ['.js', '.jsx']

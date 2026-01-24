@@ -1,70 +1,117 @@
-# Getting Started with Create React App
+# Fit4Life
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A fitness web app to create workout plans, track sessions, and view your workout history. Built with React, Vite, and Firebase.
 
-## Available Scripts
+**Live app:** [https://fit4life-909ca.web.app](https://fit4life-909ca.web.app)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Create Plan** – Build custom workouts and add exercises (sets are added during the session).
+- **Workouts** – Start a plan, track sets (reps, weight, complete), use an in‑workout timer, and pause/resume.
+- **Past Workouts** – Scrollable history beside the calendar: date, workout name, duration, and exercises per day.
+- **Calendar** – Monthly view of workout days; click a day to see details.
+- **Login / Sign up** – Email and password (Firebase Auth). Workouts are stored per user in Firestore when logged in; otherwise they use `localStorage`.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Frontend:** React 19, Vite 6, React Router 7, Tailwind CSS
+- **Backend / DB:** Firebase (Firestore, Authentication, Hosting)
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Quick Start
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Prerequisites
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Node.js 18+
+- npm
 
-### `npm run eject`
+### Run locally
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+git clone https://github.com/SumitSaharawat/Fit4Life.git
+cd Fit4Life
+npm install
+npm run dev
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Open [http://localhost:3000](http://localhost:3000).
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+**Or** double‑click `RUN-FIT4LIFE.command` (macOS) or run `./run.sh`.  
+See [HOW-TO-RUN.txt](HOW-TO-RUN.txt) for more options.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Firebase Setup (Database & Hosting)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+To use Firestore and Auth, and to deploy:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Create a [Firebase](https://console.firebase.google.com/) project.
+2. Enable **Firestore** and **Authentication → Email/Password**.
+3. Add a web app and copy `firebaseConfig` into `.env` (use [.env.example](.env.example) as a template).
+4. Set your project in [.firebaserc](.firebaserc) (`projects.default`).
 
-### Code Splitting
+**Guides:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- [DATABASE-AND-HOSTING.md](DATABASE-AND-HOSTING.md) – Firestore, Auth, and Hosting
+- [FIREBASE-CONFIG-STEPS.md](FIREBASE-CONFIG-STEPS.md) – Where to paste `firebaseConfig`
 
-### Analyzing the Bundle Size
+Without Firebase, the app still runs using `localStorage` for workouts.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## Deploy
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```bash
+npm run build
+npx firebase-tools deploy
+```
 
-### Advanced Configuration
+Or:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```bash
+npm run deploy
+```
 
-### Deployment
+(Uses `npx firebase-tools`; you can also install `firebase-tools` globally.)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
+Fit4Life/
+├── public/           # Static assets
+├── src/
+│   ├── contexts/     # AuthContext (Firebase Auth)
+│   ├── lib/          # firebase.js, workoutsDb.js
+│   ├── pages/        # Home, Login, Signup, CreatePlan, Workouts, WorkoutDetails
+│   ├── Styles/
+│   ├── App.jsx
+│   └── main.jsx
+├── firebase.json     # Hosting and Firestore config
+├── firestore.rules   # Firestore security (per-user workouts)
+├── vite.config.js
+└── package.json
+```
+
+---
+
+## Scripts
+
+| Command        | Description                    |
+|----------------|--------------------------------|
+| `npm run dev`  | Start Vite dev server          |
+| `npm run build`| Production build → `dist/`     |
+| `npm run preview` | Serve `dist/` locally      |
+| `npm run deploy` | Build and deploy to Firebase |
+
+---
+
+## License
+
+MIT

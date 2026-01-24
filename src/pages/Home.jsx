@@ -8,15 +8,10 @@ export default function Home() {
       <section className="hero-combined">
         <section className="hero">
           <h1>Welcome to Fit4Life </h1>
-          <p>Your ultimate fitness companion – explore exercises, track workouts, and create custom plans.</p>
+          <p>Your ultimate fitness companion – track workouts and create custom plans.</p>
         </section>
 
         <section className="features">
-          <Link to="/exercises" className="feature-card">
-            <h3> Exercises </h3>
-            <p>Find exercises for all body parts, categorized by equipment.</p>
-          </Link>
-
           <Link to="/workouts" className="feature-card">
             <h3> Workouts </h3>
             <p>Find the pre-build workout plan to save time and provide better results</p>

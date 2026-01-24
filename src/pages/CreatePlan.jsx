@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { loadWorkouts, saveWorkouts } from "../lib/workoutsDb";
 import "../Styles/CreatePlan.css";
 
 const IMAGE_POOL = [
@@ -23,10 +25,9 @@ function makeImagePicker(pool) {
 }
 
 export default function CreatePlan() {
-  const [workouts, setWorkouts] = useState(() => {
-    const saved = localStorage.getItem("workouts");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user, loading } = useAuth();
+  const [workouts, setWorkouts] = useState([]);
+  const loadedRef = useRef(false);
   const [showModal, setShowModal] = useState(false);
   const [newWorkoutName, setNewWorkoutName] = useState("");
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
@@ -42,10 +43,20 @@ export default function CreatePlan() {
   // stable picker across renders
   const pickImageRef = useRef(makeImagePicker(IMAGE_POOL));
 
-  // Save workouts to localStorage whenever they change
+  // Load workouts from Firestore (when logged in) or localStorage on mount and when user changes
   useEffect(() => {
-    localStorage.setItem("workouts", JSON.stringify(workouts));
-  }, [workouts]);
+    if (loading) return;
+    loadedRef.current = false;
+    loadWorkouts(user?.uid ?? null).then((w) => {
+      setWorkouts(w);
+      loadedRef.current = true;
+    });
+  }, [user?.uid, loading]);
+
+  // Save workouts to Firestore/localStorage whenever they change (after first load)
+  useEffect(() => {
+    if (loadedRef.current) saveWorkouts(workouts, user?.uid ?? null);
+  }, [workouts, user?.uid]);
 
   const addWorkoutCard = () => {
     if (!newWorkoutName.trim()) return;

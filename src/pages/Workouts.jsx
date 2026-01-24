@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { loadWorkouts, saveWorkouts } from "../lib/workoutsDb";
 import "../Styles/WorkoutDetails.css";
 
 export default function Workouts() {
-  const [workouts, setWorkouts] = useState(() => {
-    const saved = localStorage.getItem("workouts");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user, loading } = useAuth();
+  const [workouts, setWorkouts] = useState([]);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [exercises, setExercises] = useState([]);
   const [timer, setTimer] = useState(0);
@@ -56,53 +56,50 @@ export default function Workouts() {
     }
   }, [selectedWorkout, exercises, timer, isTimerRunning]);
 
-  // Load workout and sync workouts on mount
+  // Load workouts from Firestore (when logged in) or localStorage; handle paused/auto-start on mount
   useEffect(() => {
-    // Sync workouts from localStorage
-    const stored = localStorage.getItem("workouts");
-    if (stored) {
-      const parsed = JSON.parse(stored);
+    if (loading) return;
+    loadWorkouts(user?.uid ?? null).then((parsed) => {
       setWorkouts(parsed);
-      
+
       // Check for paused workout session
       const savedSession = localStorage.getItem("activeWorkoutSession");
       if (savedSession && !selectedWorkout) {
         try {
           const session = JSON.parse(savedSession);
-          // Check if session is recent (within 24 hours)
           const hoursSincePause = (Date.now() - session.timestamp) / (1000 * 60 * 60);
           if (hoursSincePause < 24) {
             setPausedWorkout(session);
-          } else {
-            localStorage.removeItem("activeWorkoutSession");
+            return;
           }
+          localStorage.removeItem("activeWorkoutSession");
         } catch (e) {
           console.error("Error loading saved session:", e);
         }
       }
-      
-      // Check if workout should be auto-started from URL
+
+      // Auto-start from URL ?start=id
       const startWorkoutId = searchParams.get("start");
       if (startWorkoutId && !selectedWorkout && !pausedWorkout) {
         const workout = parsed.find((w) => w.id === parseInt(startWorkoutId));
         if (workout) {
           startWorkout(workout);
-          // Clear URL parameter after starting
           navigate("/workouts", { replace: true });
-        }
-      } else {
-        // Check if workout should be auto-started from localStorage
-        const saved = localStorage.getItem("selectedWorkout");
-        if (saved && !selectedWorkout && !pausedWorkout) {
-          const workout = JSON.parse(saved);
-          const latestWorkout = parsed.find((w) => w.id === workout.id) || workout;
-          startWorkout(latestWorkout);
-          localStorage.removeItem("selectedWorkout");
+          return;
         }
       }
-    }
+
+      // Auto-start from localStorage (e.g. from Create Plan "Start")
+      const saved = localStorage.getItem("selectedWorkout");
+      if (saved && !selectedWorkout && !pausedWorkout) {
+        const workout = JSON.parse(saved);
+        const latestWorkout = parsed.find((w) => w.id === workout.id) || workout;
+        startWorkout(latestWorkout);
+        localStorage.removeItem("selectedWorkout");
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, navigate]);
+  }, [loading, user?.uid, searchParams, navigate]);
 
   const startWorkout = (workout) => {
     setSelectedWorkout(workout);
@@ -280,12 +277,9 @@ export default function Workouts() {
 
   const saveWorkoutProgress = () => {
     if (!selectedWorkout) return;
-    
-    // Get latest workouts from localStorage
-    const latestWorkouts = JSON.parse(localStorage.getItem("workouts") || "[]");
-    
-    // Update workout with progress data (keep original plan structure, update exercises with progress)
-    const updatedWorkouts = latestWorkouts.map((w) => {
+
+    // Update workout with progress (use current state; persist via saveWorkouts)
+    const updatedWorkouts = workouts.map((w) => {
       if (w.id === selectedWorkout.id) {
         // Save exercises with progress (no targetReps)
         const updatedExercises = exercises.map((ex) => {
@@ -310,10 +304,10 @@ export default function Workouts() {
       }
       return w;
     });
-    
+
     setWorkouts(updatedWorkouts);
-    localStorage.setItem("workouts", JSON.stringify(updatedWorkouts));
-    
+    saveWorkouts(updatedWorkouts, user?.uid ?? null);
+
     // Clear paused workout if it exists
     setPausedWorkout(null);
     localStorage.removeItem("activeWorkoutSession");
@@ -347,6 +341,31 @@ export default function Workouts() {
     return workouts.filter(workout => 
       workout.workoutDates && workout.workoutDates.includes(dateStr)
     );
+  };
+
+  // Past workout entries for the scrollable history (date desc)
+  const getPastWorkoutEntries = () => {
+    const allDates = getAllWorkoutDates();
+    if (allDates.length === 0) return [];
+    const sorted = [...allDates].sort((a, b) => b.localeCompare(a));
+    return sorted.map((dateStr) => {
+      const list = getWorkoutsForDate(dateStr);
+      const dateFormatted = new Date(dateStr + "T12:00:00").toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      const workoutsWithDuration = list.map((w) => {
+        let mins = null;
+        if (w.lastCompleted && String(w.lastCompleted).split("T")[0] === dateStr && typeof w.totalTime === "number") {
+          mins = Math.round(w.totalTime / 60);
+        }
+        const exerciseNames = (w.exercises || []).map((e) => e.name).filter(Boolean);
+        return { id: w.id, name: w.name, mins, exerciseNames };
+      });
+      return { dateStr, dateFormatted, workouts: workoutsWithDuration };
+    });
   };
 
   // Navigate to previous month
@@ -511,31 +530,26 @@ export default function Workouts() {
           : w
       );
       setWorkouts(updatedWorkouts);
-      localStorage.setItem("workouts", JSON.stringify(updatedWorkouts));
+      saveWorkouts(updatedWorkouts, user?.uid ?? null);
     }
-    
+
     // Start the workout
     startWorkout(workout);
   };
 
   if (!selectedWorkout) {
     const allWorkoutDates = getAllWorkoutDates();
+    const pastEntries = getPastWorkoutEntries();
     return (
       <div className="workout-detail-container">
         <div className="workout-header-with-calendar">
-          {workouts.length > 0 && (
-            <div className="workouts-calendar-compact-wrapper">
-              {renderMonthlyCalendar(allWorkoutDates)}
-            </div>
-          )}
           <div className="header-content-wrapper">
             <div className="header-content">
               <h2>Select a Workout to Start</h2>
-              <p style={{ marginBottom: "2rem", fontSize: "0.9rem", opacity: 0.8 }}>
+              <p style={{ marginBottom: "1rem", fontSize: "0.9rem", opacity: 0.8 }}>
                 Choose a workout plan below to begin your session.
               </p>
             </div>
-            {/* Paused Workout Resume Button - Under text, right side of calendar */}
             {pausedWorkout && (
               <div className="paused-workout-indicator-side">
                 <div className="paused-workout-info-side">
@@ -552,6 +566,39 @@ export default function Workouts() {
                 </div>
               </div>
             )}
+          </div>
+          <div className="calendar-past-row">
+            {workouts.length > 0 && (
+              <div className="workouts-calendar-compact-wrapper">
+                {renderMonthlyCalendar(allWorkoutDates)}
+              </div>
+            )}
+            <section className="past-workouts-section">
+              <h3 className="past-workouts-title">Past Workouts</h3>
+              <div className="past-workouts-scroll">
+                {pastEntries.length > 0 ? (
+                  pastEntries.map(({ dateStr, dateFormatted, workouts: list }) => (
+                    <div key={dateStr} className="past-workouts-entry">
+                      <span className="past-workouts-date">{dateFormatted}</span>
+                      <div className="past-workouts-workouts">
+                        {list.map((w) => (
+                          <div key={`${dateStr}-${w.id}`} className="past-workouts-workout">
+                            <span className="past-workouts-workout-name">
+                              {w.name}{w.mins != null ? ` (${w.mins} min)` : ""}
+                            </span>
+                            {w.exerciseNames && w.exerciseNames.length > 0 && (
+                              <span className="past-workouts-exercises"> — {w.exerciseNames.join(", ")}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="past-workouts-empty">No past workouts yet. Start one to see it here.</p>
+                )}
+              </div>
+            </section>
           </div>
         </div>
 

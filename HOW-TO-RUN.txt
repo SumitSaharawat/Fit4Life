@@ -1,0 +1,42 @@
+Fit4Life - How to run (Vite dev server, like before)
+====================================================
+
+EASIEST: Double-click
+---------------------
+1. In Finder, open the Fit4Life folder.
+2. Double-click:  RUN-FIT4LIFE.command
+
+   If macOS says "from an unidentified developer":
+   Right-click it → Open → Open.
+
+3. First time only: it will run "npm install" (1–2 min), then start Vite.
+   Next times: Vite starts directly.
+
+4. When you see "Local: http://localhost:3000", open that in Safari.
+
+5. To stop: in the Terminal window, press Ctrl+C.
+
+
+Or in Terminal
+--------------
+  cd /Users/sumitmac/Desktop/Fit4Life
+  ./run.sh
+
+  (First time: npm install runs, then Vite. Then open http://localhost:3000 in Safari.)
+
+
+Or the classic way
+------------------
+  cd /Users/sumitmac/Desktop/Fit4Life
+  npm install     # only needed once if node_modules is missing
+  npm run dev     # start Vite
+
+  Then open http://localhost:3000 in Safari.
+
+
+Fallback (no npm): built app only
+---------------------------------
+  cd /Users/sumitmac/Desktop/Fit4Life
+  node serve.cjs
+
+  Then open http://localhost:3000 (serves the existing dist/ build).
