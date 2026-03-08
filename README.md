@@ -24,17 +24,20 @@ A fitness web app to create workout plans, track sessions, and view your workout
 
 ## Features
 
+- **Home** – Welcome screen with feature cards linking to Workouts, Create Plan, and Exercises.
 - **Create Plan** – Build custom workouts and add exercises (sets are added during the session).
 - **Workouts** – Start a plan, track sets (reps, weight, complete), use an in‑workout timer, and pause/resume.
 - **Past Workouts** – Scrollable history beside the calendar: date, workout name, duration, and exercises per day.
 - **Calendar** – Monthly view of workout days; click a day to see details.
+- **Exercise Library** – Search and filter exercises; view instructions and images.
+- **Settings** – Weight unit (lbs/kg), distance unit, rest timer.
 - **Login / Sign up** – Email and password (Firebase Auth). Workouts are stored per user in Firestore when logged in; otherwise they use `localStorage`.
 
 ---
 
 ## Tech Stack
 
- HTML, CSS, JavaScript, React 19, Vite 6, React Router 7, Tailwind CSS, Firebase (Firestore, Authentication, Hosting)
+HTML, CSS, JavaScript, React 19, Vite 6, React Router 7, Tailwind CSS, Vitest, Firebase (Firestore, Authentication, Hosting)
 
 ---
 
@@ -61,13 +64,21 @@ See [HOW-TO-RUN.txt](HOW-TO-RUN.txt) for more options.
 
 ### Exercise images (optional)
 
-Exercise cards use local images in `public/exercise-images/`. To download them from the URLs in `src/data/exercises.js`:
+Exercise cards use local images in `public/exercise-images/`. To download them:
 
 ```bash
 npm run download-exercise-images
 ```
 
 If you skip this step, the app shows a placeholder image for exercises.
+
+### Run tests
+
+```bash
+npm test
+```
+
+Or `npm run test:watch` for watch mode.
 
 ---
 
@@ -114,16 +125,21 @@ Push to `main` triggers tests, build, and deploy to Firebase Hosting. See [CI-CD
 
 ```
 Fit4Life/
-├── public/           # Static assets
+├── .github/workflows/   # CI/CD (test, build, deploy)
+├── docs/                # Screenshots, guides (CI-CD-SETUP.md)
+├── public/              # Static assets, exercise images
 ├── src/
-│   ├── contexts/     # AuthContext (Firebase Auth)
-│   ├── lib/          # firebase.js, workoutsDb.js
-│   ├── pages/        # Home, Login, Signup, CreatePlan, Workouts, WorkoutDetails
+│   ├── components/      # ExercisePicker, SettingsContent, ui
+│   ├── contexts/        # AuthContext, SettingsContext
+│   ├── lib/             # firebase.js, workoutsDb.js, exerciseDbApi.js, exerciseImages.js
+│   ├── pages/           # Home, Login, Signup, CreatePlan, Workouts, WorkoutDetails, Exercises, ExerciseDetail, Settings
+│   ├── data/
 │   ├── Styles/
 │   ├── App.jsx
 │   └── main.jsx
-├── firebase.json     # Hosting and Firestore config
-├── firestore.rules   # Firestore security (per-user workouts)
+├── Test/                # Unit and integration tests (Vitest)
+├── firebase.json        # Hosting and Firestore config
+├── firestore.rules      # Firestore security (per-user workouts)
 ├── vite.config.js
 └── package.json
 ```
@@ -132,11 +148,13 @@ Fit4Life/
 
 ## Scripts
 
-| Command        | Description                    |
-|----------------|--------------------------------|
-| `npm run dev`  | Start Vite dev server          |
-| `npm run build`| Production build → `dist/`     |
-| `npm run preview` | Serve `dist/` locally      |
-| `npm run deploy` | Build and deploy to Firebase |
+| Command            | Description                         |
+|--------------------|-------------------------------------|
+| `npm run dev`      | Start Vite dev server               |
+| `npm run build`    | Production build → `dist/`          |
+| `npm run preview`  | Serve `dist/` locally               |
+| `npm run deploy`   | Build and deploy to Firebase        |
+| `npm test`         | Run tests (Vitest)                  |
+| `npm run test:watch` | Run tests in watch mode           |
 
 
