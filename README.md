@@ -117,7 +117,7 @@ npm run deploy
 
 ### CI/CD (GitHub Actions)
 
-Push to `main` triggers tests, build, and deploy to Firebase Hosting. See [CI-CD-SETUP.md](docs/CI-CD-SETUP.md) for configuring `FIREBASE_TOKEN`.
+Push to `main` triggers tests, build, and deploy to Firebase Hosting. See [CI-CD-SETUP.md](docs/CI-CD-SETUP.md) for required GitHub secrets (Firebase config for sign-in + `FIREBASE_TOKEN` for deploy).
 
 ---
 
