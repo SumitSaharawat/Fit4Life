@@ -1,6 +1,5 @@
 # Fit4Life
 
-<<<<<<< HEAD
 A fitness web app to create workout plans, track sessions, and view your workout history. Built with React, Vite, and Firebase.
 
 **Live app:** [https://fit4life-909ca.web.app](https://fit4life-909ca.web.app)
@@ -120,9 +119,18 @@ Fit4Life/
 | `npm run preview` | Serve `dist/` locally      |
 | `npm run deploy` | Build and deploy to Firebase |
 
----
-<img width="1464" height="842" alt="Screenshot 2026-01-23 at 8 14 11 PM" src="https://github.com/user-attachments/assets/bf3ee0ae-3294-45bb-88f0-95402fb898bc" />
-<img width="1464" height="842" alt="Screenshot 2026-01-23 at 8 14 25 PM" src="https://github.com/user-attachments/assets/dea7c1b9-2e34-40ae-a07c-7f6ba32abf77" />
-<img width="1464" height="842" alt="Screenshot 2026-01-23 at 8 14 34 PM" src="https://github.com/user-attachments/assets/107e9556-e948-45c6-8efb-d26a526f9c85" />
-<img width="1464" height="842" alt="Screenshot 2026-01-23 at 8 14 34 PM" src="https://github.com/user-attachments/assets/2e4e10ba-0704-4d44-8e85-18a2a7d9d123" />
+
+## Screenshots
+
+| Home Screen | Workouts (Calendar) | Workouts (Past & Start) |
+|-------------|---------------------|-------------------------|
+| ![Home Screen](docs/screenshots/Home-Screen.png) | ![WorkoutPage](docs/screenshots/WorkoutPage.png) | ![WorkoutPage2](docs/screenshots/WorkoutPage2.png) |
+
+| Exercise Library | Exercise List | Exercise Detail |
+|------------------|---------------|-----------------|
+| ![ExercisePage](docs/screenshots/ExercisePage.png) | ![ExercisePage2](docs/screenshots/ExercisePage2.png) | ![ExercisePage3](docs/screenshots/ExercisePage3.png) |
+
+| Create Plan | Create New Workout |
+|-------------|--------------------|
+| ![CreatePlanPage](docs/screenshots/CreatePlanPage.png) | ![CreatePlanPage2](docs/screenshots/CreatePlanPage2.png) |
 
