@@ -6,6 +6,22 @@ A fitness web app to create workout plans, track sessions, and view your workout
 
 ---
 
+## Screenshots
+
+| Home Screen | Workouts (Calendar) | Workouts (Past & Start) |
+|-------------|---------------------|-------------------------|
+| ![Home Screen](docs/screenshots/Home-Screen.png) | ![WorkoutPage](docs/screenshots/WorkoutPage.png) | ![WorkoutPage2](docs/screenshots/WorkoutPage2.png) |
+
+| Exercise Library | Exercise List | Exercise Detail |
+|------------------|---------------|-----------------|
+| ![ExercisePage](docs/screenshots/ExercisePage.png) | ![ExercisePage2](docs/screenshots/ExercisePage2.png) | ![ExercisePage3](docs/screenshots/ExercisePage3.png) |
+
+| Create Plan | Create New Workout |
+|-------------|--------------------|
+| ![CreatePlanPage](docs/screenshots/CreatePlanPage.png) | ![CreatePlanPage2](docs/screenshots/CreatePlanPage2.png) |
+
+---
+
 ## Features
 
 - **Create Plan** – Build custom workouts and add exercises (sets are added during the session).
@@ -123,18 +139,4 @@ Fit4Life/
 | `npm run preview` | Serve `dist/` locally      |
 | `npm run deploy` | Build and deploy to Firebase |
 
-
-## Screenshots
-
-| Home Screen | Workouts (Calendar) | Workouts (Past & Start) |
-|-------------|---------------------|-------------------------|
-| ![Home Screen](docs/screenshots/Home-Screen.png) | ![WorkoutPage](docs/screenshots/WorkoutPage.png) | ![WorkoutPage2](docs/screenshots/WorkoutPage2.png) |
-
-| Exercise Library | Exercise List | Exercise Detail |
-|------------------|---------------|-----------------|
-| ![ExercisePage](docs/screenshots/ExercisePage.png) | ![ExercisePage2](docs/screenshots/ExercisePage2.png) | ![ExercisePage3](docs/screenshots/ExercisePage3.png) |
-
-| Create Plan | Create New Workout |
-|-------------|--------------------|
-| ![CreatePlanPage](docs/screenshots/CreatePlanPage.png) | ![CreatePlanPage2](docs/screenshots/CreatePlanPage2.png) |
 
