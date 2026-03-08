@@ -1,0 +1,17 @@
+{
+  "short_name": "Fit4Life",
+  "name": "Fit4Life – Workout Planner",
+  "description": "Your workout planner. Create plans, track workouts, and browse exercises.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a"
+}
