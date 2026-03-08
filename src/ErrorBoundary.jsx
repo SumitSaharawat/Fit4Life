@@ -4,7 +4,7 @@ export default class ErrorBoundary extends Component {
   static getDerivedStateFromError(err){ return { err }; }
   render(){
     if (this.state.err) return (
-      <pre style="white-space:pre-wrap;padding:16px;background:#220;color:#faa">
+      <pre style={{ whiteSpace: 'pre-wrap', padding: 16, background: '#220', color: '#faa' }}>
         {String(this.state.err.stack || this.state.err)}
       </pre>
     );

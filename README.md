@@ -88,6 +88,10 @@ npm run deploy
 
 (Uses `npx firebase-tools`; you can also install `firebase-tools` globally.)
 
+### CI/CD (GitHub Actions)
+
+Push to `main` triggers tests, build, and deploy to Firebase Hosting. See [CI-CD-SETUP.md](docs/CI-CD-SETUP.md) for configuring `FIREBASE_TOKEN`.
+
 ---
 
 ## Project Structure
