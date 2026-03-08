@@ -21,6 +21,11 @@ export default function Home() {
             <h3> Create Plans </h3>
             <p>Build your own workout plans at your own comfort.</p>
           </Link>
+
+          <Link to="/exercises" className="feature-card">
+            <h3> Exercises </h3>
+            <p>Browse pre-built exercises with instructions, demo GIFs, and muscles used.</p>
+          </Link>
         </section>
       </section>
     </div>

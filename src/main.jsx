@@ -5,13 +5,12 @@ import App from './App.jsx';
 import reportWebVitals from './reportWebVitals';
 import ErrorBoundary from "./ErrorBoundary.jsx";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <ErrorBoundary><App/></ErrorBoundary>
-);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>
 );
 

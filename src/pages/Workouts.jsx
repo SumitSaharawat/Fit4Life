@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { loadWorkouts, saveWorkouts } from "../lib/workoutsDb";
+import { getExerciseByIdFromApi, getApiExerciseImageUrl, getApiImageUrlFromPath } from "../lib/exerciseDbApi";
+import { useSettings } from "../contexts/SettingsContext";
+import ExercisePicker from "../components/ExercisePicker";
 import "../Styles/WorkoutDetails.css";
 
 export default function Workouts() {
@@ -14,13 +17,70 @@ export default function Workouts() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [showExerciseForm, setShowExerciseForm] = useState(false);
-  const [newExerciseName, setNewExerciseName] = useState("");
+  const [howToPopup, setHowToPopup] = useState(null);
+  const [howToLoading, setHowToLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [hoveredDate, setHoveredDate] = useState(null);
   const [pausedWorkout, setPausedWorkout] = useState(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const timerIntervalRef = useRef(null);
+  const { weightUnit, restTimerSeconds } = useSettings();
+  const weightLabel = weightUnit === "kg" ? "Weight (kg)" : "Weight (lbs)";
+  const [restTimerActive, setRestTimerActive] = useState(false);
+  const [restTimerRemaining, setRestTimerRemaining] = useState(0);
+  const restTimerIntervalRef = useRef(null);
+  const howToImageRef = useRef(null);
+  const howToImageIntervalRef = useRef(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [supersetPickerForId, setSupersetPickerForId] = useState(null);
+
+  const playRestDoneSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.2);
+    } catch (_) {}
+  };
+
+  // Rest timer countdown (effect runs only when rest timer is started)
+  useEffect(() => {
+    if (!restTimerActive) {
+      if (restTimerIntervalRef.current) {
+        clearInterval(restTimerIntervalRef.current);
+        restTimerIntervalRef.current = null;
+      }
+      return;
+    }
+    restTimerIntervalRef.current = setInterval(() => {
+      setRestTimerRemaining((prev) => {
+        if (prev <= 1) {
+          if (restTimerIntervalRef.current) {
+            clearInterval(restTimerIntervalRef.current);
+            restTimerIntervalRef.current = null;
+          }
+          playRestDoneSound();
+          setRestTimerActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (restTimerIntervalRef.current) {
+        clearInterval(restTimerIntervalRef.current);
+        restTimerIntervalRef.current = null;
+      }
+    };
+  }, [restTimerActive]);
 
   // Timer effect
   useEffect(() => {
@@ -204,16 +264,9 @@ export default function Workouts() {
     );
   };
 
-  // Add a new exercise during workout
-  const addExercise = () => {
-    if (!newExerciseName.trim()) return;
-    const newExercise = {
-      id: Date.now(),
-      name: newExerciseName.trim(),
-      setsArray: []
-    };
-    setExercises((prev) => [...prev, newExercise]);
-    setNewExerciseName("");
+  // Add a new exercise during workout (from library or custom via ExercisePicker)
+  const onPickExercise = (exercise) => {
+    setExercises((prev) => [...prev, { ...exercise, setsArray: exercise.setsArray || [] }]);
     setShowExerciseForm(false);
   };
 
@@ -221,6 +274,102 @@ export default function Workouts() {
   const deleteExercise = (exerciseId) => {
     setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
   };
+
+  // Override rest time for this exercise (current workout only; empty = use default)
+  const setExerciseRest = (exerciseId, value) => {
+    if (value === "" || value == null) {
+      setExercises((prev) =>
+        prev.map((ex) => (ex.id === exerciseId ? { ...ex, restTimerSeconds: undefined } : ex))
+      );
+      return;
+    }
+    const num = parseInt(String(value), 10);
+    if (Number.isNaN(num)) return;
+    const sec = Math.min(600, Math.max(0, num));
+    setExercises((prev) =>
+      prev.map((ex) => (ex.id === exerciseId ? { ...ex, restTimerSeconds: sec } : ex))
+    );
+  };
+
+  const getSupersetPartner = (exs, exercise) => {
+    if (!exercise?.supersetGroupId) return null;
+    return exs.find((e) => e.id !== exercise.id && e.supersetGroupId === exercise.supersetGroupId) || null;
+  };
+
+  const pairSupersetWith = (currentId, partnerId) => {
+    const currentIdx = exercises.findIndex((e) => e.id === currentId);
+    const partnerIdx = exercises.findIndex((e) => e.id === partnerId);
+    if (currentIdx === -1 || partnerIdx === -1) return;
+    setOpenMenuId(null);
+    setSupersetPickerForId(null);
+    const groupId = "ss-" + Date.now();
+    setExercises((prev) => {
+      const withGroup = prev.map((ex) =>
+        ex.id === currentId || ex.id === partnerId ? { ...ex, supersetGroupId: groupId } : ex
+      );
+      const partnerEx = withGroup.find((e) => e.id === partnerId);
+      const withoutPartner = withGroup.filter((e) => e.id !== partnerId);
+      const insertAt = withoutPartner.findIndex((e) => e.id === currentId) + 1;
+      return [...withoutPartner.slice(0, insertAt), partnerEx, ...withoutPartner.slice(insertAt)];
+    });
+  };
+
+  const removeSupersetWorkout = (exerciseId) => {
+    const ex = exercises.find((e) => e.id === exerciseId);
+    const partner = getSupersetPartner(exercises, ex);
+    if (!ex?.supersetGroupId && !partner) return;
+    const idToClear = ex?.supersetGroupId || partner?.supersetGroupId;
+    setExercises((prev) =>
+      prev.map((e) => (e.supersetGroupId === idToClear ? { ...e, supersetGroupId: undefined } : e))
+    );
+    setOpenMenuId(null);
+    setSupersetPickerForId(null);
+  };
+
+  // Open "How to do it" popup (library: fetch from API; custom: use instruction)
+  const openHowTo = async (exercise) => {
+    if (exercise.libraryId) {
+      setHowToLoading(true);
+      setHowToPopup({ title: exercise.name, steps: [], imageUrls: [] });
+      try {
+        const apiEx = await getExerciseByIdFromApi(exercise.libraryId);
+        if (apiEx) {
+          const steps = (apiEx.instructions || []).filter(Boolean);
+          const imageUrls = (apiEx.images || [])
+            .map((path) => getApiImageUrlFromPath(path))
+            .filter(Boolean);
+          setHowToPopup({ title: apiEx.name, steps, imageUrls });
+        } else {
+          setHowToPopup({ title: exercise.name, steps: ["No instructions found."], imageUrls: [] });
+        }
+      } catch {
+        setHowToPopup({ title: exercise.name, steps: ["Could not load instructions."], imageUrls: [] });
+      } finally {
+        setHowToLoading(false);
+      }
+    } else if (exercise.instruction) {
+      const steps = exercise.instruction.split("\n").map((s) => s.trim()).filter(Boolean);
+      setHowToPopup({ title: exercise.name, steps: steps.length ? steps : ["No instructions."], imageUrls: [] });
+    }
+  };
+
+  // Cycle "How to do it" popup images (gif-style) when multiple images
+  useEffect(() => {
+    if (!howToPopup?.imageUrls || howToPopup.imageUrls.length <= 1 || !howToImageRef.current) return;
+    const urls = howToPopup.imageUrls;
+    let idx = 0;
+    howToImageRef.current.src = urls[0];
+    howToImageIntervalRef.current = setInterval(() => {
+      idx = (idx + 1) % urls.length;
+      if (howToImageRef.current) howToImageRef.current.src = urls[idx];
+    }, 1500);
+    return () => {
+      if (howToImageIntervalRef.current) {
+        clearInterval(howToImageIntervalRef.current);
+        howToImageIntervalRef.current = null;
+      }
+    };
+  }, [howToPopup?.title, howToPopup?.imageUrls?.length]);
 
   const pauseTimer = () => {
     setIsTimerRunning(false);
@@ -568,11 +717,9 @@ export default function Workouts() {
             )}
           </div>
           <div className="calendar-past-row">
-            {workouts.length > 0 && (
-              <div className="workouts-calendar-compact-wrapper">
-                {renderMonthlyCalendar(allWorkoutDates)}
-              </div>
-            )}
+            <div className="workouts-calendar-compact-wrapper">
+              {renderMonthlyCalendar(allWorkoutDates)}
+            </div>
             <section className="past-workouts-section">
               <h3 className="past-workouts-title">Past Workouts</h3>
               <div className="past-workouts-scroll">
@@ -642,7 +789,7 @@ export default function Workouts() {
           <div className="workouts-list-container">
             {workouts.map((workout) => (
               <div key={workout.id} className="workout-list-card">
-                <div 
+                <div
                   className="workout-list-card-bg"
                   style={{
                     backgroundImage: workout.image ? `url(${workout.image})` : undefined,
@@ -702,6 +849,23 @@ export default function Workouts() {
         </div>
       </div>
 
+      {restTimerActive && (
+        <div className="workout-rest-bar">
+          <span className="workout-rest-bar-label">Rest</span>
+          <span className="workout-rest-bar-count">{restTimerRemaining}s</span>
+          <button
+            type="button"
+            className="workout-rest-bar-skip"
+            onClick={() => {
+              setRestTimerActive(false);
+              setRestTimerRemaining(0);
+            }}
+          >
+            Skip
+          </button>
+        </div>
+      )}
+
       <div className="exercises-list">
         <div className="add-exercise-section">
           {!showExerciseForm ? (
@@ -713,54 +877,285 @@ export default function Workouts() {
               + Add Exercise
             </button>
           ) : (
-            <div className="add-exercise-form">
-              <input
-                type="text"
-                className="exercise-name-input"
-                placeholder="Enter exercise name"
-                value={newExerciseName}
-                onChange={(e) => setNewExerciseName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    addExercise();
-                  } else if (e.key === 'Escape') {
-                    setShowExerciseForm(false);
-                    setNewExerciseName("");
-                  }
-                }}
-                autoFocus
-              />
-              <div className="add-exercise-form-actions">
-                <button className="confirm-exercise-btn" onClick={addExercise}>
-                  Add
-                </button>
-                <button
-                  className="cancel-exercise-btn"
-                  onClick={() => {
-                    setShowExerciseForm(false);
-                    setNewExerciseName("");
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+            <ExercisePicker
+              onSelect={onPickExercise}
+              onCancel={() => setShowExerciseForm(false)}
+            />
           )}
         </div>
 
         {exercises.length > 0 ? (
-          exercises.map((exercise) => (
+          (() => {
+            const workoutItems = [];
+            for (let i = 0; i < exercises.length; i++) {
+              const ex = exercises[i];
+              const next = exercises[i + 1];
+              if (ex.supersetGroupId && next?.supersetGroupId === ex.supersetGroupId) {
+                workoutItems.push({ type: "superset", exercises: [ex, next] });
+                i++;
+              } else {
+                workoutItems.push({ type: "single", exercise: ex });
+              }
+            }
+            return workoutItems.map((item) =>
+              item.type === "superset" ? (
+                <div key={item.exercises.map((e) => e.id).join("-")} className="workout-superset-group">
+                  <div className="workout-superset-label">Superset</div>
+                  {item.exercises.map((exercise) => {
+                    const workoutPartner = getSupersetPartner(exercises, exercise);
+                    const workoutMenuOpen = openMenuId === exercise.id;
+                    return (
+                    <div key={exercise.id} className="exercise-card workout-superset-card">
+                      <div className="exercise-card-header">
+                        <h3>{exercise.name}</h3>
+                        <div className="exercise-card-header-actions">
+                          {(exercise.libraryId || exercise.instruction) && (
+                            <button
+                              type="button"
+                              className="how-to-do-it-btn-workout"
+                              onClick={() => openHowTo(exercise)}
+                              title="How to do it"
+                            >
+                              How to do it
+                            </button>
+                          )}
+                          <div className="workout-card-menu-wrap">
+                            <button
+                              type="button"
+                              className="workout-card-menu-btn"
+                              onClick={() => setOpenMenuId(workoutMenuOpen ? null : exercise.id)}
+                              aria-label="Options"
+                              title="Timer & Superset"
+                            >
+                              ⋮
+                            </button>
+                            {workoutMenuOpen && (
+                              <>
+                                <div className="workout-card-menu-backdrop" onClick={() => setOpenMenuId(null)} />
+                                <div className="workout-card-menu-dropdown">
+                                  <div className="workout-card-menu-item workout-card-menu-timer">
+                                    <label>Rest (sec)</label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="600"
+                                      step="5"
+                                      placeholder={`Default (${restTimerSeconds})`}
+                                      value={exercise.restTimerSeconds ?? ""}
+                                      onChange={(e) => setExerciseRest(exercise.id, e.target.value)}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  <button type="button" className="workout-card-menu-item" onClick={() => setSupersetPickerForId(exercise.id)}>
+                                    Superset
+                                  </button>
+                                  {workoutPartner && (
+                                    <button type="button" className="workout-card-menu-item" onClick={() => removeSupersetWorkout(exercise.id)}>
+                                      Remove superset
+                                    </button>
+                                  )}
+                                  <button type="button" className="workout-card-menu-item workout-card-menu-delete" onClick={() => { deleteExercise(exercise.id); setOpenMenuId(null); }}>
+                                    Delete
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="exercise-rest-row-workout">
+                        <label htmlFor={`rest-${exercise.id}`} className="exercise-rest-label-workout">
+                          Rest between sets (sec)
+                        </label>
+                        <input
+                          id={`rest-${exercise.id}`}
+                          type="number"
+                          min="0"
+                          max="600"
+                          step="5"
+                          placeholder={`Default (${restTimerSeconds})`}
+                          value={exercise.restTimerSeconds ?? ""}
+                          onChange={(e) => setExerciseRest(exercise.id, e.target.value)}
+                          className="exercise-rest-input-workout"
+                          title="Leave empty for universal default from Settings"
+                        />
+                        <span className="exercise-rest-hint-workout">empty = default</span>
+                      </div>
+                      <div className="exercise-table-container">
+                        <div className="exercise-table-header-actions">
+                          <button
+                            className="add-set-btn-workout"
+                            onClick={() => addSetToExercise(exercise.id)}
+                            title="Add set to this exercise"
+                          >
+                            + Add Set
+                          </button>
+                        </div>
+                        <table className="exercise-table">
+                          <thead>
+                            <tr>
+                              <th>Set</th>
+                              <th>Reps</th>
+                              <th>{weightLabel}</th>
+                              <th>Complete</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {exercise.setsArray && exercise.setsArray.length > 0 ? (
+                              exercise.setsArray.map((set) => (
+                                <tr key={set.id} className={set.completed ? "completed-row" : ""}>
+                                  <td>{set.setNumber}</td>
+                                  <td>
+                                    <input
+                                      type="number"
+                                      className="set-input-small"
+                                      placeholder="Reps"
+                                      min="0"
+                                      value={set.actualReps}
+                                      onChange={(e) => updateSetValue(exercise.id, set.id, "actualReps", e.target.value)}
+                                    />
+                                  </td>
+                                  <td>
+                                    <input
+                                      type="number"
+                                      className="set-input-small"
+                                      placeholder={weightUnit === "kg" ? "kg" : "lbs"}
+                                      min="0"
+                                      step="0.5"
+                                      value={set.weight}
+                                      onChange={(e) => updateSetValue(exercise.id, set.id, "weight", e.target.value)}
+                                    />
+                                  </td>
+                                  <td>
+                                    <button
+                                      className={`complete-set-btn ${set.completed ? "checked" : ""}`}
+                                      onClick={() => {
+                                        const wasCompleted = set.completed;
+                                        toggleSetCompletion(exercise.id, set.id);
+                                        const idx = exercises.findIndex((e) => e.id === exercise.id);
+                                        const nextEx = exercises[idx + 1];
+                                        const isSupersetPartner = nextEx?.supersetGroupId === exercise.supersetGroupId;
+                                        if (!wasCompleted && !isSupersetPartner) {
+                                          const restSec = exercise.restTimerSeconds != null ? exercise.restTimerSeconds : restTimerSeconds;
+                                          if (restSec > 0) {
+                                            setRestTimerRemaining(restSec);
+                                            setRestTimerActive(true);
+                                          }
+                                        }
+                                      }}
+                                      aria-label={`Mark set ${set.setNumber} as ${set.completed ? "incomplete" : "complete"}`}
+                                    >
+                                      {set.completed ? "✓" : ""}
+                                    </button>
+                                  </td>
+                                  <td>
+                                    <button
+                                      className="delete-set-btn-workout"
+                                      onClick={() => deleteSetFromExercise(exercise.id, set.id)}
+                                      aria-label="Delete set"
+                                      title="Delete set"
+                                    >
+                                      ✕
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="5" style={{ textAlign: "center", padding: "1rem", color: "rgba(255, 255, 255, 0.6)" }}>
+                                  No sets yet. Click "Add Set" above.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                </table>
+              </div>
+            </div>
+                  );
+                  })}
+                </div>
+              ) : (
+                (() => {
+                  const exercise = item.exercise;
+                  const workoutPartner = getSupersetPartner(exercises, exercise);
+                  const workoutMenuOpen = openMenuId === exercise.id;
+                  return (
             <div key={exercise.id} className="exercise-card">
               <div className="exercise-card-header">
                 <h3>{exercise.name}</h3>
-                <button
-                  className="delete-exercise-btn-workout"
-                  onClick={() => deleteExercise(exercise.id)}
-                  aria-label="Delete exercise"
-                  title="Delete exercise"
-                >
-                  ✕
-                </button>
+                <div className="exercise-card-header-actions">
+                  {(exercise.libraryId || exercise.instruction) && (
+                    <button
+                      type="button"
+                      className="how-to-do-it-btn-workout"
+                      onClick={() => openHowTo(exercise)}
+                      title="How to do it"
+                    >
+                      How to do it
+                    </button>
+                  )}
+                  <div className="workout-card-menu-wrap">
+                    <button
+                      type="button"
+                      className="workout-card-menu-btn"
+                      onClick={() => setOpenMenuId(workoutMenuOpen ? null : exercise.id)}
+                      aria-label="Options"
+                      title="Timer & Superset"
+                    >
+                      ⋮
+                    </button>
+                    {workoutMenuOpen && (
+                      <>
+                        <div className="workout-card-menu-backdrop" onClick={() => setOpenMenuId(null)} />
+                        <div className="workout-card-menu-dropdown">
+                          <div className="workout-card-menu-item workout-card-menu-timer">
+                            <label>Rest (sec)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="600"
+                              step="5"
+                              placeholder={`Default (${restTimerSeconds})`}
+                              value={exercise.restTimerSeconds ?? ""}
+                              onChange={(e) => setExerciseRest(exercise.id, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          <button type="button" className="workout-card-menu-item" onClick={() => setSupersetPickerForId(exercise.id)}>
+                            Superset
+                          </button>
+                          {workoutPartner && (
+                            <button type="button" className="workout-card-menu-item" onClick={() => removeSupersetWorkout(exercise.id)}>
+                              Remove superset
+                            </button>
+                          )}
+                          <button type="button" className="workout-card-menu-item workout-card-menu-delete" onClick={() => { deleteExercise(exercise.id); setOpenMenuId(null); }}>
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="exercise-rest-row-workout">
+                <label htmlFor={`rest-${exercise.id}`} className="exercise-rest-label-workout">
+                  Rest between sets (sec)
+                </label>
+                <input
+                  id={`rest-${exercise.id}`}
+                  type="number"
+                  min="0"
+                  max="600"
+                  step="5"
+                  placeholder={`Default (${restTimerSeconds})`}
+                  value={exercise.restTimerSeconds ?? ""}
+                  onChange={(e) => setExerciseRest(exercise.id, e.target.value)}
+                  className="exercise-rest-input-workout"
+                  title="Leave empty for universal default from Settings"
+                />
+                <span className="exercise-rest-hint-workout">empty = default</span>
               </div>
               <div className="exercise-table-container">
                 <div className="exercise-table-header-actions">
@@ -777,7 +1172,7 @@ export default function Workouts() {
                     <tr>
                       <th>Set</th>
                       <th>Reps</th>
-                      <th>Weight (lbs)</th>
+                      <th>{weightLabel}</th>
                       <th>Complete</th>
                       <th>Actions</th>
                     </tr>
@@ -801,7 +1196,7 @@ export default function Workouts() {
                             <input
                               type="number"
                               className="set-input-small"
-                              placeholder="Weight"
+                              placeholder={weightUnit === "kg" ? "kg" : "lbs"}
                               min="0"
                               step="0.5"
                               value={set.weight}
@@ -810,11 +1205,24 @@ export default function Workouts() {
                           </td>
                           <td>
                             <button
-                              className={`complete-set-btn ${set.completed ? 'checked' : ''}`}
-                              onClick={() => toggleSetCompletion(exercise.id, set.id)}
-                              aria-label={`Mark set ${set.setNumber} as ${set.completed ? 'incomplete' : 'complete'}`}
+                              className={`complete-set-btn ${set.completed ? "checked" : ""}`}
+                              onClick={() => {
+                                const wasCompleted = set.completed;
+                                toggleSetCompletion(exercise.id, set.id);
+                                const idx = exercises.findIndex((e) => e.id === exercise.id);
+                                const nextEx = exercises[idx + 1];
+                                const isSupersetPartner = nextEx?.supersetGroupId === exercise.supersetGroupId;
+                                if (!wasCompleted && !isSupersetPartner) {
+                                  const restSec = exercise.restTimerSeconds != null ? exercise.restTimerSeconds : restTimerSeconds;
+                                  if (restSec > 0) {
+                                    setRestTimerRemaining(restSec);
+                                    setRestTimerActive(true);
+                                  }
+                                }
+                              }}
+                              aria-label={`Mark set ${set.setNumber} as ${set.completed ? "incomplete" : "complete"}`}
                             >
-                              {set.completed ? '✓' : ''}
+                              {set.completed ? "✓" : ""}
                             </button>
                           </td>
                           <td>
@@ -831,7 +1239,7 @@ export default function Workouts() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" style={{ textAlign: 'center', padding: '1rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                        <td colSpan="5" style={{ textAlign: "center", padding: "1rem", color: "rgba(255, 255, 255, 0.6)" }}>
                           No sets yet. Click "Add Set" above.
                         </td>
                       </tr>
@@ -840,7 +1248,11 @@ export default function Workouts() {
                 </table>
               </div>
             </div>
-          ))
+                  );
+                })()
+              )
+            );
+          })()
         ) : (
           <p className="no-exercises">No exercises in this workout.</p>
         )}
@@ -851,6 +1263,78 @@ export default function Workouts() {
           Finish Workout & Save Progress
         </button>
       </div>
+
+      {howToPopup && (
+        <div className="workout-how-to-overlay" onClick={() => setHowToPopup(null)}>
+          <div className="workout-how-to-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="workout-how-to-header">
+              <h3>{howToPopup.title}</h3>
+              <button
+                type="button"
+                className="workout-how-to-close"
+                onClick={() => setHowToPopup(null)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <h4 className="workout-how-to-subtitle">How to do it</h4>
+            {howToLoading ? (
+              <p className="workout-how-to-loading">Loading…</p>
+            ) : (
+              <>
+                {howToPopup.imageUrls && howToPopup.imageUrls.length > 0 && (
+                  <div className="workout-how-to-image-wrap">
+                    <img
+                      ref={howToImageRef}
+                      src={howToPopup.imageUrls[0]}
+                      alt=""
+                      className="workout-how-to-image"
+                      loading="eager"
+                    />
+                  </div>
+                )}
+                <ol className="workout-how-to-steps">
+                  {howToPopup.steps.map((step, i) => (
+                    <li key={i}>{step}</li>
+                  ))}
+                </ol>
+              </>
+            )}
+            <div className="workout-how-to-footer">
+              <button type="button" className="workout-how-to-close-btn" onClick={() => setHowToPopup(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {supersetPickerForId != null && (
+        <div className="workout-how-to-overlay" onClick={() => setSupersetPickerForId(null)}>
+          <div className="workout-how-to-popup superset-picker-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="workout-how-to-header">
+              <h3>Pair with exercise (superset)</h3>
+              <button type="button" className="workout-how-to-close" onClick={() => setSupersetPickerForId(null)} aria-label="Close">✕</button>
+            </div>
+            <p className="workout-how-to-loading" style={{ marginBottom: "1rem", opacity: 0.9 }}>Select an exercise to pair with. They will be done back-to-back with minimal rest.</p>
+            <ul className="superset-picker-list-workout">
+              {exercises
+                .filter((ex) => ex.id !== supersetPickerForId)
+                .map((ex) => (
+                  <li key={ex.id}>
+                    <button type="button" className="superset-picker-item-workout" onClick={() => pairSupersetWith(supersetPickerForId, ex.id)}>
+                      {ex.name}
+                    </button>
+                  </li>
+                ))}
+            </ul>
+            <div className="workout-how-to-footer">
+              <button type="button" className="workout-how-to-close-btn" onClick={() => setSupersetPickerForId(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

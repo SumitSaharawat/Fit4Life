@@ -21,20 +21,70 @@ ul {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-body{
+/* Main content – offset below fixed navbar to prevent overlap */
+.app-content {
+  padding-top: 70px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Mobile/tablet: nav links wrap, navbar is taller */
+@media (max-width: 920px) {
+  .app-content {
+    padding-top: 130px;
+  }
+}
+
+/* Small mobile: compact header but nav wraps */
+@media (max-width: 480px) {
+  .app-content {
+    padding-top: 140px;
+  }
+}
+
+/* Home page: minimal padding – just enough to clear fixed navbar (no nav links on home) */
+.app-content--home {
+  padding-top: 60px;
+}
+
+@media (max-width: 480px) {
+  .app-content--home {
+    padding-top: 65px;
+  }
+}
+
+body {
   margin: 0;
+}
+
+/* Suspense fallback – full viewport, same background so no black flash */
+.app-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: orange;
+  font-size: 1.1rem;
+  font-weight: 500;
+  background-color: #0a0a0a;
+  background-image: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(224, 137, 0, 0.15) 0%, transparent 50%, #0a0a0a 100%);
+  background-attachment: fixed;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 30px;
+  padding: 12px 16px;
   font-size: 24px;
   font-weight: bold;
   color: orange;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .logo {
@@ -43,6 +93,16 @@ body{
   color: orange;
   text-decoration: none;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  height: 36px;
+  width: auto;
+  max-width: 140px;
+  display: block;
+  object-fit: contain;
 }
 
 .nav-links {
@@ -76,6 +136,114 @@ body{
   gap: 10px;
   align-items: center;
   flex-shrink: 0;
+}
+
+.navbar-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 165, 0, 0.15);
+  color: orange;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.navbar-settings-btn:hover {
+  background: rgba(255, 165, 0, 0.3);
+  color: #ffdd57;
+}
+
+/* Settings modal popup */
+.settings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.settings-modal {
+  background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .settings-modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+  .settings-modal {
+    max-height: 85dvh;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+.settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 165, 0, 0.2);
+}
+
+.settings-modal-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: orange;
+}
+
+.settings-modal-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.settings-modal-close:hover {
+  color: orange;
+}
+
+.settings-modal-body {
+  padding: 1rem 1.25rem 1.25rem;
+  overflow-y: auto;
+  max-height: calc(90vh - 60px);
+}
+
+.settings-modal-body .settings-sections {
+  max-width: none;
+  margin: 0;
+}
+
+.settings-modal-body .settings-section {
+  margin-bottom: 1rem;
+}
+
+.settings-modal-body .settings-section:last-child {
+  margin-bottom: 0;
 }
 
 .login-btn,
@@ -115,15 +283,21 @@ body{
   box-shadow: 0 4px 12px rgba(255, 165, 0, 0.5);
 }
 
-@media (max-width: 768px) {
+/* Tablet: 920px and below – wrap before Exercises touches settings */
+@media (max-width: 920px) {
   .header {
-    padding: 12px 15px;
+    padding: 12px 16px;
     flex-wrap: wrap;
     gap: 10px;
   }
   
   .logo {
     font-size: 20px;
+  }
+  
+  .logo-img {
+    height: 32px;
+    max-width: 120px;
   }
   
   .nav-links {
@@ -136,8 +310,12 @@ body{
   }
   
   .nav-links li a {
-    padding: 8px 15px;
+    padding: 10px 16px;
     font-size: 16px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .auth-buttons {
@@ -145,10 +323,64 @@ body{
     gap: 8px;
   }
   
+  .navbar-settings-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
   .login-btn,
   .signup-btn {
-    padding: 6px 16px;
+    padding: 10px 18px;
     font-size: 14px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile: 480px and below */
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px;
+  }
+  
+  .logo-img {
+    height: 28px;
+    max-width: 100px;
+  }
+  
+  .nav-links li a {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+}
+
+/* Tablet landscape / small laptop: 769px–1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .header {
+    padding: 14px 20px;
+  }
+  
+  .logo-img {
+    height: 38px;
+  }
+  
+  .nav-links li a {
+    padding: 10px 18px;
+    font-size: 17px;
+  }
+}
+
+/* Desktop: 1025px and up */
+@media (min-width: 1025px) {
+  .header {
+    padding: 15px 30px;
+  }
+  
+  .logo-img {
+    height: 42px;
+    max-width: 160px;
   }
 }
 
@@ -159,10 +391,27 @@ body{
   font-size: 0.9rem;
   margin-right: 1rem;
   font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 600px) {
+  .user-info {
+    max-width: 180px;
+  }
+}
+
+@media (min-width: 768px) {
+  .user-info {
+    max-width: none;
+  }
 }
 
 .logout-btn {
-  padding: 8px 16px;
+  padding: 10px 18px;
+  min-height: 44px;
   background: rgba(211, 47, 47, 0.3);
   border: 2px solid rgba(211, 47, 47, 0.5);
   border-radius: 6px;
@@ -173,6 +422,9 @@ body{
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logout-btn:hover {

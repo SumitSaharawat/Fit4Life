@@ -26,7 +26,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && npx firebase-tools deploy",
-    "test": "react-scripts test"
+    "test": "react-scripts test",
+    "download-exercise-images": "node scripts/download-exercise-images.mjs"
   },
   "eslintConfig": {
     "extends": [

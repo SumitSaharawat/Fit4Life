@@ -1,0 +1,258 @@
+.exercise-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.exercise-picker-modal {
+  background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  border-radius: 16px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.exercise-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 165, 0, 0.2);
+}
+
+.exercise-picker-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.exercise-picker-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.exercise-picker-close:hover {
+  color: orange;
+}
+
+.exercise-picker-tabs {
+  display: flex;
+  padding: 0 1rem;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.exercise-picker-tabs button {
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.exercise-picker-tabs button:hover {
+  color: white;
+}
+
+.exercise-picker-tabs button.active {
+  color: orange;
+  border-bottom-color: orange;
+}
+
+.exercise-picker-search {
+  margin: 1rem 1.25rem 0;
+  padding: 0.6rem 1rem;
+  width: calc(100% - 2.5rem);
+  font-size: 1rem;
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+.exercise-picker-search::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.exercise-picker-muscle-select {
+  margin: 0.5rem 1.25rem 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  width: calc(100% - 2.5rem);
+  cursor: pointer;
+}
+
+.exercise-picker-list {
+  padding: 1rem 1.25rem 1.25rem;
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.exercise-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 165, 0, 0.2);
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.exercise-picker-item:hover {
+  background: rgba(255, 165, 0, 0.15);
+  border-color: rgba(255, 165, 0, 0.5);
+}
+
+.exercise-picker-item-img-wrap {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #2d2d2d;
+}
+
+.exercise-picker-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.exercise-picker-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.exercise-picker-item-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.exercise-picker-item-equipment {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.2rem;
+}
+
+.exercise-picker-empty {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.exercise-picker-custom {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.exercise-picker-custom label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.exercise-picker-custom .required {
+  color: #ff6b6b;
+}
+
+.exercise-picker-input,
+.exercise-picker-textarea {
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.exercise-picker-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.exercise-picker-input::placeholder,
+.exercise-picker-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.exercise-picker-hint {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: -0.25rem 0 0;
+}
+
+.exercise-picker-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.exercise-picker-add-btn {
+  padding: 0.65rem 1.25rem;
+  background: orange;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+}
+
+.exercise-picker-add-btn:hover:not(:disabled) {
+  background: #e08900;
+}
+
+.exercise-picker-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.exercise-picker-cancel-btn {
+  padding: 0.65rem 1rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.exercise-picker-cancel-btn:hover {
+  border-color: orange;
+  color: orange;
+}

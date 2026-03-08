@@ -44,6 +44,16 @@ Open [http://localhost:3000](http://localhost:3000).
 **Or** double‑click `RUN-FIT4LIFE.command` (macOS) or run `./run.sh`.  
 See [HOW-TO-RUN.txt](HOW-TO-RUN.txt) for more options.
 
+### Exercise images (optional)
+
+Exercise cards use local images in `public/exercise-images/`. To download them from the URLs in `src/data/exercises.js`:
+
+```bash
+npm run download-exercise-images
+```
+
+If you skip this step, the app shows a placeholder image for exercises.
+
 ---
 
 ## Firebase Setup (Database & Hosting)

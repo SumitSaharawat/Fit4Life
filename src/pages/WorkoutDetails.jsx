@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { useSettings } from "../contexts/SettingsContext";
 import "../Styles/WorkoutDetails.css";
 
 export default function WorkoutDetails() {
+  const { weightUnit } = useSettings();
+  const weightLabel = weightUnit === "kg" ? "Weight (kg)" : "Weight (lbs)";
+  const weightPlaceholder = weightUnit === "kg" ? "Weight in kg" : "Weight in lbs";
   const [exercises, setExercises] = useState([]);
   const [showExerciseForm, setShowExerciseForm] = useState(true);
   const [exerciseName, setExerciseName] = useState("");
@@ -68,7 +72,7 @@ export default function WorkoutDetails() {
                   <tr>
                     <th>Sets</th>
                     <th>Reps</th>
-                    <th>Weight (lbs)</th>
+                    <th>{weightLabel}</th>
                     <th>Type</th>
                     <th>Delete</th>
                   </tr>
@@ -138,7 +142,7 @@ export default function WorkoutDetails() {
                 <input
                   name="weight"
                   type="number"
-                  placeholder="Weight in lbs"
+                  placeholder={weightPlaceholder}
                   value={setFormData.weight}
                   onChange={(e) => setSetFormData({ ...setFormData, weight: e.target.value })}
                 />
